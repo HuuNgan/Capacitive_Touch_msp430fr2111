@@ -8,10 +8,18 @@
 #ifndef CAPACITIVE_TOUCH_CAP_TOUCH_H_
 #define CAPACITIVE_TOUCH_CAP_TOUCH_H_
 
+// Input pins definition
 #define CapT1   BIT1        //port2
 #define CapT2   BIT0        //port2
 #define CapT3   BIT7        //port1
 #define CapT4   BIT6        //port1
+
+// Values definition
+#define C1_ACTIVE_VALUE         100
+#define C2_ACTIVE_VALUE         100
+#define C3_ACTIVE_VALUE         30
+#define C4_ACTIVE_VALUE         100
+#define CHARGE_TIME                10
 
 // Definition for capacitive touch I/O ports
 #define CAPT1_PORT_OUT      P2OUT
@@ -50,6 +58,15 @@
 #define CAPT4_PORT_REN      P1REN
 #define CAPT4_PORT_IN       P1IN
 
+// Cap touch configure definitions
+#define cap_touch_enable(port, pin)     CAPTIOCTL|=(CAPTIOEN|CAPTIOPOSEL_##port|CAPTIOPISEL_##pin)
+#define cap_touch_disable(port, pin)    CAPTIOCTL&=~(CAPTIOEN|CAPTIOPOSEL_##port|CAPTIOPISEL_##pin)
+#define cap_touch_disable_all          CAPTIOCTL&=~0xFF
 
+//Prototypes
+int C1_discharge_time();
+int C2_discharge_time();
+int C3_discharge_time();
+int C4_discharge_time();
 
 #endif /* CAPACITIVE_TOUCH_CAP_TOUCH_H_ */
