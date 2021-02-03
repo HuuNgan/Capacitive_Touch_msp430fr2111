@@ -1,0 +1,1 @@
+"./main.obj" "./Capacitive_Touch/cap_touch.obj" "../lnk_msp430fr2111.cmd" -llibc.a 
