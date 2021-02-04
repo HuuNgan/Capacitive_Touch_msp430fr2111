@@ -15,11 +15,11 @@
 #define CapT4   BIT6        //port1
 
 // Values definition
-#define C1_ACTIVE_VALUE         30
-#define C2_ACTIVE_VALUE         25
+#define C1_ACTIVE_VALUE         35
+#define C2_ACTIVE_VALUE         28
 #define C3_ACTIVE_VALUE         35
 #define C4_ACTIVE_VALUE         30
-#define CHARGE_TIME             10
+#define CHARGE_TIME             500000
 
 // Definition for capacitive touch I/O ports
 

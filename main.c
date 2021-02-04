@@ -7,9 +7,9 @@
 #define LED3    BIT3        //blue led, port1
 #define LED4    BIT5        //red led, port1
 #define LED5    BIT4        //green led, port1
-#define LED_ACTIVE_TIME     10000
+#define LED_ACTIVE          1
+#define LED_DEACTIVE        0
 
-#define delay_time                   10000
 #define NUMBER_OF_MODES              4
 #define MCLK_FREQ_MHZ 8                     // MCLK = 8MHz
 
@@ -17,10 +17,13 @@
 long int IC_val1, IC_val2;
 int mode = 0, periode;
 int touch_array[4];
+char led_state;
+int delay_time = 1000;
 
 void configClock_16MHz(void);
 void Software_Trim();                       // Software Trim to get the best DCOFTRIM value
 void config_clock_8MHz(void);
+void initTimer(void);
 
 
 
@@ -41,11 +44,10 @@ int main(void)
 
 	P1DIR |= (LED3 + LED4 + LED5);
 	P2DIR |= (LED1 + LED2);
-//    P2REN |= CapT1 + CapT2;             //enable pull resistor
 
-//	P1SEL0 &= ~BIT0;
-    P1SEL1 |= BIT0;                                 // Set as SMCLK pin, second function
-    P1DIR |= BIT0;
+
+//    P1SEL1 |= BIT0;                                 // Set as SMCLK pin, second function
+//    P1DIR |= BIT0;
 
 	// Disable the GPIO power-on default high-impedance mode
 	// to activate previously configured port settings
@@ -56,32 +58,53 @@ int main(void)
     __delay_cycles(16000000);
     P2OUT |= (LED1 + LED2);
 
-    TB0CTL |= TBSSEL__SMCLK | MC__CONTINUOUS;     //start timerB0, SMCLK, continuous mode
+    initTimer();
 
     while(1)
     {
-        reccord_touch_value(touch_array);
-        if(C1_discharge_time() >= C1_ACTIVE_VALUE)
+//        reccord_touch_value(touch_array);
+//        if(touch_array[0] >= C1_ACTIVE_VALUE)
+//        {
+//            P2OUT |= (LED1 + LED2);
+//            P1OUT &= ~(LED3 + LED4 + LED5);
+//            __delay_cycles(3000000);
+//        }
+//        if(touch_array[1] >= C2_ACTIVE_VALUE)
+//        {
+//            P1OUT |= (LED3 + LED4 + LED5);
+//            P2OUT &= ~(LED1 + LED2);
+//            __delay_cycles(5000000);
+//        }
+//        if(touch_array[2] >= C3_ACTIVE_VALUE);
+//        {
+//            ;
+//        }
+//        if(touch_array[3] >= C4_ACTIVE_VALUE);
+//        {
+//            ;
+//        }
+
+        while(C1_discharge_time() >= C1_ACTIVE_VALUE)
         {
             P2OUT |= (LED1 + LED2);
             P1OUT &= ~(LED3 + LED4 + LED5);
-            __delay_cycles(5000000);
+            __delay_cycles(3000000);
         }
-        if(C2_discharge_time() >= C2_ACTIVE_VALUE)
+        while(C2_discharge_time() >= C2_ACTIVE_VALUE)
         {
             P1OUT |= (LED3 + LED4 + LED5);
             P2OUT &= ~(LED1 + LED2);
-            __delay_cycles(5000000);
+            __delay_cycles(3000000);
         }
         if(C3_discharge_time() >= C3_ACTIVE_VALUE)
         {
             mode++;
-            __delay_cycles(5000000);
+            __delay_cycles(3000000);
         }
         if(C4_discharge_time() > C4_ACTIVE_VALUE)
         {
             mode--;
-            __delay_cycles(5000000);
+            __delay_cycles(3000000);
         }
         if(mode > NUMBER_OF_MODES)  mode=0;
         if(mode < 0)    mode = NUMBER_OF_MODES;
@@ -90,10 +113,8 @@ int main(void)
         {
             case 0:
                 P1OUT |= (LED3 + LED4 + LED5);
-//                P2OUT |= (LED1 + LED2);
-//                __delay_cycles(delay_time);
-                P2OUT &= !(LED1 + LED2);
-//                __delay_cycles(delay_time);
+                if(led_state)   P2OUT &= ~(LED1 + LED2);
+                else    P2OUT |= (LED1 + LED2);
                 break;
             case 1:
 //                P2OUT |= LED1;
@@ -140,13 +161,18 @@ int main(void)
 //	return 0;
 }
 
+void LED_Set_Brightness(int percent)
+{
+    TB0CCR1 = percent*(65535/100);
+}
+
 void initTimer(void)
 {
-//    TB0CCR1 = count_value/2;
-//    TB0CCTL1 |= CCIE;
-    TB0CCR0 = LED_ACTIVE_TIME;                  //Count up to the value stored in TB0CCR0
-    TB0CCTL0 |= CCIE;                           //CCR0 interrupt enable
-    TB0CTL |= TBSSEL__ACLK | MC__UP | TBCLR;    // select the ACLK, UP mode, clear TBR to start counting
+    // Configure Timer_B
+    LED_Set_Brightness(50);                            // Count up to the value stored in TB0CCR0
+    TB0CCTL1 |= CCIE;                           //CCR1 Interrupt Enabled
+    TB0CTL |= TBSSEL__SMCLK | MC__CONTINUOUS | TBCLR | TBIE;     //start timerB0, SMCLK, continuous mode, clear TBR, enable interrupt
+    __enable_interrupt();
 }
 
 void configClock_16MHz(void)
@@ -165,8 +191,7 @@ void configClock_16MHz(void)
     __bic_SR_register(SCG0);                           // enable FLL
     while(CSCTL7 & (FLLUNLOCK0 | FLLUNLOCK1));         // FLL locked
 
-    CSCTL4 = SELMS__DCOCLKDIV | SELA__REFOCLK;        // set default REFO(~32768Hz) as ACLK source, ACLK = 32768Hz
-                                                       // default DCOCLKDIV as MCLK and SMCLK source
+    CSCTL4 = SELMS__DCOCLKDIV | SELA__REFOCLK;        // set default REFO(~32768Hz) as ACLK source, ACLK = 32768Hz                                                // default DCOCLKDIV as MCLK and SMCLK source
 }
 
 void config_clock_8MHz(void)
@@ -247,4 +272,27 @@ void Software_Trim()
     CSCTL0 = csCtl0Copy;                       // Reload locked DCOTAP
     CSCTL1 = csCtl1Copy;                       // Reload locked DCOFTRIM
     while(CSCTL7 & (FLLUNLOCK0 | FLLUNLOCK1)); // Poll until FLL is locked
+}
+
+
+#pragma vector=TIMER0_B1_VECTOR
+__interrupt void TIMER0_B1_ISR(void)
+{
+    switch(__even_in_range(TB0IV,TB0IV_TBIFG))
+    {
+        case TB0IV_NONE:
+            break;
+        case TB0IV_TB0CCR1:
+//            led_state = LED_DEACTIVE;
+            if(mode==0) P2OUT |= (LED1+LED2);
+            break;
+        case TB0IV_TBCCR2:
+            break;                  // CCR2 not used
+        case TB0IV_TBIFG:
+//            led_state = LED_ACTIVE;
+            if(mode==0) P2OUT &= ~(LED1+LED2);
+            break;
+        default:
+            break;
+    }
 }
