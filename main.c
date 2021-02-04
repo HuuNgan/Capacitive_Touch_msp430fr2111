@@ -7,15 +7,23 @@
 #define LED3    BIT3        //blue led, port1
 #define LED4    BIT5        //red led, port1
 #define LED5    BIT4        //green led, port1
+#define LED_ACTIVE_TIME     10000
 
 #define delay_time                   10000
 #define NUMBER_OF_MODES              4
+#define MCLK_FREQ_MHZ 8                     // MCLK = 8MHz
 
 //long int timer_count;
 long int IC_val1, IC_val2;
 int mode = 0, periode;
+int touch_array[4];
 
-void configClock(void);
+void configClock_16MHz(void);
+void Software_Trim();                       // Software Trim to get the best DCOFTRIM value
+void config_clock_8MHz(void);
+
+
+
 
 /**
  * main.c
@@ -23,7 +31,7 @@ void configClock(void);
 int main(void)
 {
 	WDTCTL = WDTPW | WDTHOLD;	    // stop watchdog timer
-	configClock();
+	configClock_16MHz();
 //    cap_touch_enable(2, 1);         // enable cap touch at P2.1
 
 	P1SEL0 &= ~(LED3 + LED4 + LED5);
@@ -36,8 +44,8 @@ int main(void)
 //    P2REN |= CapT1 + CapT2;             //enable pull resistor
 
 //	P1SEL0 &= ~BIT0;
-//    P1SEL1 |= BIT0;                                 // Set as SMCLK pin, second function
-//    P1DIR |= BIT0;
+    P1SEL1 |= BIT0;                                 // Set as SMCLK pin, second function
+    P1DIR |= BIT0;
 
 	// Disable the GPIO power-on default high-impedance mode
 	// to activate previously configured port settings
@@ -49,14 +57,10 @@ int main(void)
     P2OUT |= (LED1 + LED2);
 
     TB0CTL |= TBSSEL__SMCLK | MC__CONTINUOUS;     //start timerB0, SMCLK, continuous mode
-//    P2IES |=  CapT1 + CapT2;             // Hi/Low edge
-//    P2IE  &= ~ CapT2;
-//    P2IE  |=  CapT1;             // interrupt enabled
-//    P2DIR &= ~(CapT1 + CapT2);          // set CapT1 and CapT2 as input
-//    __bis_SR_register(GIE);
 
     while(1)
     {
+        reccord_touch_value(touch_array);
         if(C1_discharge_time() >= C1_ACTIVE_VALUE)
         {
             P2OUT |= (LED1 + LED2);
@@ -136,7 +140,16 @@ int main(void)
 //	return 0;
 }
 
-void configClock(void)
+void initTimer(void)
+{
+//    TB0CCR1 = count_value/2;
+//    TB0CCTL1 |= CCIE;
+    TB0CCR0 = LED_ACTIVE_TIME;                  //Count up to the value stored in TB0CCR0
+    TB0CCTL0 |= CCIE;                           //CCR0 interrupt enable
+    TB0CTL |= TBSSEL__ACLK | MC__UP | TBCLR;    // select the ACLK, UP mode, clear TBR to start counting
+}
+
+void configClock_16MHz(void)
 {
     // Configure one FRAM waitstate as required by the device datasheet for MCLK
     // operation beyond 8MHz _before_ configuring the clock system.
@@ -156,59 +169,82 @@ void configClock(void)
                                                        // default DCOCLKDIV as MCLK and SMCLK source
 }
 
-//// Port 2 interrupt service routine
-//#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-//#pragma vector=PORT2_VECTOR
-//__interrupt void Port_2(void)
-//#elif defined(__GNUC__)
-//void __attribute__ ((interrupt(PORT2_VECTOR))) Port_2 (void)
-//#else
-//#error Compiler not supported!
-//#endif
-//{
-//    if((CAPT1_PORT_IN & CapT1)==0)
-//    {
-//        IC_val2 = TB0R;
-//        if(IC_val2 > IC_val1)    periode = IC_val2 - IC_val1;
-//        else periode = 65536 + IC_val2 - IC_val1;
-//        IC_val1 = IC_val2;
-//
-//        if(periode >= C1_ACTIVE_VALUE)
-//        {
-//            mode++;
-//            if(mode >= NUMBER_OF_MODES) mode = 0;
-//            __delay_cycles(3000000);
-//        }
-//
-//        //switch to checking CapT2
-//        cap_touch_disable(2, 1);
-//        cap_touch_enable(2, 0);          //enable CapT2
-//        P2IE  = 0;
-//        P2IE  |=  CapT2;                // interrupt enabled
-//
-//        P2IFG &= ~CapT1;                        // Clear CapT1 IFG
-//    }
-//
-//    else if((CAPT2_PORT_IN & CapT2)==0)
-//    {
-//        IC_val2 = TB0R;
-//        if(IC_val2 > IC_val1)    periode = IC_val2 - IC_val1;
-//        else periode = 65536 + IC_val2 - IC_val1;
-//        IC_val1 = IC_val2;
-//
-//        if(periode >= C1_ACTIVE_VALUE)
-//        {
-//            mode++;
-//            if(mode >= NUMBER_OF_MODES) mode = 0;
-//            __delay_cycles(3000000);
-//        }
-//
-//        //switch to checking CapT1
-//        cap_touch_disable(2, 0);
-//        cap_touch_enable(2, 1);          //enable CapT1
-//        P2IE  = 0;
-//        P2IE  |=  CapT1;                // interrupt enabled
-//
-//        P2IFG &= ~CapT2;                        // Clear CapT1 IFG
-//    }
-//}
+void config_clock_8MHz(void)
+{
+    __bis_SR_register(SCG0);                // disable FLL
+    CSCTL3 |= SELREF__REFOCLK;              // Set REFO as FLL reference source
+    CSCTL1 = DCOFTRIMEN_1 | DCOFTRIM0 | DCOFTRIM1 | DCORSEL_3;// DCOFTRIM=3, DCO Range = 8MHz
+    CSCTL2 = FLLD_0 + 243;                  // DCODIV = 8MHz
+    __delay_cycles(3);
+    __bic_SR_register(SCG0);                // enable FLL
+    Software_Trim();                        // Software Trim to get the best DCOFTRIM value
+}
+
+void Software_Trim()
+{
+    unsigned int oldDcoTap = 0xffff;
+    unsigned int newDcoTap = 0xffff;
+    unsigned int newDcoDelta = 0xffff;
+    unsigned int bestDcoDelta = 0xffff;
+    unsigned int csCtl0Copy = 0;
+    unsigned int csCtl1Copy = 0;
+    unsigned int csCtl0Read = 0;
+    unsigned int csCtl1Read = 0;
+    unsigned int dcoFreqTrim = 3;
+    unsigned char endLoop = 0;
+
+    do
+    {
+        CSCTL0 = 0x100;                         // DCO Tap = 256
+        do
+        {
+            CSCTL7 &= ~DCOFFG;                  // Clear DCO fault flag
+        }while (CSCTL7 & DCOFFG);               // Test DCO fault flag
+
+        __delay_cycles((unsigned int)3000 * MCLK_FREQ_MHZ);// Wait FLL lock status (FLLUNLOCK) to be stable
+                                                           // Suggest to wait 24 cycles of divided FLL reference clock
+        while((CSCTL7 & (FLLUNLOCK0 | FLLUNLOCK1)) && ((CSCTL7 & DCOFFG) == 0));
+
+        csCtl0Read = CSCTL0;                   // Read CSCTL0
+        csCtl1Read = CSCTL1;                   // Read CSCTL1
+
+        oldDcoTap = newDcoTap;                 // Record DCOTAP value of last time
+        newDcoTap = csCtl0Read & 0x01ff;       // Get DCOTAP value of this time
+        dcoFreqTrim = (csCtl1Read & 0x0070)>>4;// Get DCOFTRIM value
+
+        if(newDcoTap < 256)                    // DCOTAP < 256
+        {
+            newDcoDelta = 256 - newDcoTap;     // Delta value between DCPTAP and 256
+            if((oldDcoTap != 0xffff) && (oldDcoTap >= 256)) // DCOTAP cross 256
+                endLoop = 1;                   // Stop while loop
+            else
+            {
+                dcoFreqTrim--;
+                CSCTL1 = (csCtl1Read & (~DCOFTRIM)) | (dcoFreqTrim<<4);
+            }
+        }
+        else                                   // DCOTAP >= 256
+        {
+            newDcoDelta = newDcoTap - 256;     // Delta value between DCPTAP and 256
+            if(oldDcoTap < 256)                // DCOTAP cross 256
+                endLoop = 1;                   // Stop while loop
+            else
+            {
+                dcoFreqTrim++;
+                CSCTL1 = (csCtl1Read & (~DCOFTRIM)) | (dcoFreqTrim<<4);
+            }
+        }
+
+        if(newDcoDelta < bestDcoDelta)         // Record DCOTAP closest to 256
+        {
+            csCtl0Copy = csCtl0Read;
+            csCtl1Copy = csCtl1Read;
+            bestDcoDelta = newDcoDelta;
+        }
+
+    }while(endLoop == 0);                      // Poll until endLoop == 1
+
+    CSCTL0 = csCtl0Copy;                       // Reload locked DCOTAP
+    CSCTL1 = csCtl1Copy;                       // Reload locked DCOFTRIM
+    while(CSCTL7 & (FLLUNLOCK0 | FLLUNLOCK1)); // Poll until FLL is locked
+}

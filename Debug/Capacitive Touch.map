@@ -1,10 +1,10 @@
 ******************************************************************************
                   MSP430 Linker PC v18.12.4                    
 ******************************************************************************
->> Linked Thu Feb  4 11:45:35 2021
+>> Linked Thu Feb  4 15:40:48 2021
 
 OUTPUT FILE NAME:   <Capacitive Touch.out>
-ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000f684
+ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000f6b8
 
 
 MEMORY CONFIGURATION
@@ -12,8 +12,8 @@ MEMORY CONFIGURATION
          name            origin    length      used     unused   attr    fill
 ----------------------  --------  ---------  --------  --------  ----  --------
   BSL0                  00001000   00000400  00000000  00000400  RWIX
-  RAM                   00002000   00000400  000000ac  00000354  RWIX
-  FRAM                  0000f100   00000e80  000005a8  000008d8  RWIX
+  RAM                   00002000   00000400  000000b4  0000034c  RWIX
+  FRAM                  0000f100   00000e80  000005dc  000008a4  RWIX
   JTAGSIGNATURE         0000ff80   00000004  00000004  00000000  RWIX  ffff 
   BSLSIGNATURE          0000ff84   00000004  00000004  00000000  RWIX  ffff 
   INT00                 0000ff88   00000002  00000000  00000002  RWIX
@@ -107,34 +107,36 @@ section   page    origin      length       input sections
 
 .const     0    0000f128    00000000     UNINITIALIZED
 
-.text      0    0000f128    0000055c     
-                  0000f128    00000198     main.obj (.text:main)
-                  0000f2c0    000000ee     rts430x_lc_sd_eabi.lib : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
-                  0000f3ae    0000006a                            : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit_hold_wdt:__TI_auto_init_nobinit_nopinit_hold_wdt)
-                  0000f418    00000060     cap_touch.obj (.text:C3_discharge_time)
-                  0000f478    00000060     cap_touch.obj (.text:C4_discharge_time)
-                  0000f4d8    00000054     cap_touch.obj (.text:C1_discharge_time)
-                  0000f52c    00000054     cap_touch.obj (.text:C2_discharge_time)
-                  0000f580    00000040     rts430x_lc_sd_eabi.lib : cpy_util.asm.obj (.text:__memcpy_far)
-                  0000f5c0    0000003e     main.obj (.text:configClock)
-                  0000f5fe    0000003e     rts430x_lc_sd_eabi.lib : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init_nomemset:__TI_zero_init_nomemset)
-                  0000f63c    0000003c                            : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
-                  0000f678    00000006                            : exit.c.obj (.text:abort)
-                  0000f67e    00000004                            : pre_init.c.obj (.text:_system_pre_init)
-                  0000f682    00000002                            : startup.c.obj (.text:_system_post_cinit)
+.text      0    0000f128    00000590     
+                  0000f128    000001a8     main.obj (.text:main)
+                  0000f2d0    000000ee     rts430x_lc_sd_eabi.lib : copy_decompress_lzss.c.obj (.text:decompress:lzss:__TI_decompress_lzss)
+                  0000f3be    0000006a                            : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit_hold_wdt:__TI_auto_init_nobinit_nopinit_hold_wdt)
+                  0000f428    00000060     cap_touch.obj (.text:C3_discharge_time)
+                  0000f488    00000060     cap_touch.obj (.text:C4_discharge_time)
+                  0000f4e8    00000054     cap_touch.obj (.text:C1_discharge_time)
+                  0000f53c    00000054     cap_touch.obj (.text:C2_discharge_time)
+                  0000f590    00000040     rts430x_lc_sd_eabi.lib : cpy_util.asm.obj (.text:__memcpy_far)
+                  0000f5d0    0000003e     main.obj (.text:configClock)
+                  0000f60e    0000003e     rts430x_lc_sd_eabi.lib : copy_zero_init.c.obj (.text:decompress:ZI:__TI_zero_init_nomemset:__TI_zero_init_nomemset)
+                  0000f64c    0000003c                            : copy_decompress_none.c.obj (.text:decompress:none:__TI_decompress_none)
+                  0000f688    00000024     cap_touch.obj (.text:reccord_touch_value)
+                  0000f6ac    00000006     rts430x_lc_sd_eabi.lib : exit.c.obj (.text:abort)
+                  0000f6b2    00000004                            : pre_init.c.obj (.text:_system_pre_init)
+                  0000f6b6    00000002                            : startup.c.obj (.text:_system_post_cinit)
 
 .text:_isr 
-*          0    0000f684    00000024     
-                  0000f684    0000001c     rts430x_lc_sd_eabi.lib : boot.c.obj (.text:_isr:_c_int00_noargs)
-                  0000f6a0    00000008                            : isr_trap.asm.obj (.text:_isr:__TI_ISR_TRAP)
+*          0    0000f6b8    00000024     
+                  0000f6b8    0000001c     rts430x_lc_sd_eabi.lib : boot.c.obj (.text:_isr:_c_int00_noargs)
+                  0000f6d4    00000008                            : isr_trap.asm.obj (.text:_isr:__TI_ISR_TRAP)
 
-.bss       0    00002000    0000000a     UNINITIALIZED
-                  00002000    00000004     (.common:IC_val1)
-                  00002004    00000004     (.common:IC_val2)
-                  00002008    00000002     (.common:discharge_time)
+.bss       0    00002000    00000012     UNINITIALIZED
+                  00002000    00000008     (.common:touch_array)
+                  00002008    00000004     (.common:IC_val1)
+                  0000200c    00000004     (.common:IC_val2)
+                  00002010    00000002     (.common:discharge_time)
 
-.data      0    0000200a    00000002     UNINITIALIZED
-                  0000200a    00000002     main.obj (.data)
+.data      0    00002012    00000002     UNINITIALIZED
+                  00002012    00000002     main.obj (.data)
 
 .stack     0    00002360    000000a0     UNINITIALIZED
                   00002360    00000002     rts430x_lc_sd_eabi.lib : boot.c.obj (.stack)
@@ -189,14 +191,14 @@ MODULE SUMMARY
        Module                       code   ro data   rw data
        ------                       ----   -------   -------
     .\
-       main.obj                     470    0         10     
+       main.obj                     486    0         18     
     +--+----------------------------+------+---------+---------+
-       Total:                       470    0         10     
+       Total:                       486    0         18     
                                                             
     .\Capacitive_Touch\
-       cap_touch.obj                360    0         2      
+       cap_touch.obj                396    0         2      
     +--+----------------------------+------+---------+---------+
-       Total:                       360    0         2      
+       Total:                       396    0         2      
                                                             
     C:\ti\ccs930\ccs\tools\compiler\ti-cgt-msp430_18.12.4.LTS\lib\rts430x_lc_sd_eabi.lib
        copy_decompress_lzss.c.obj   238    0         0      
@@ -226,14 +228,14 @@ MODULE SUMMARY
        Stack:                       0      0         160    
        Linker Generated:            0      40        0      
     +--+----------------------------+------+---------+---------+
-       Grand Total:                 1408   64        172    
+       Grand Total:                 1460   64        180    
 
 
 LINKER GENERATED COPY TABLES
 
 __TI_cinit_table @ 0000f118 records: 2, size/record: 8, table size: 16
-	.bss: load addr=0000f10c, load size=00000006 bytes, run addr=00002000, run size=0000000a bytes, compression=zero_init
-	.data: load addr=0000f112, load size=00000006 bytes, run addr=0000200a, run size=00000002 bytes, compression=lzss
+	.bss: load addr=0000f10c, load size=00000006 bytes, run addr=00002000, run size=00000012 bytes, compression=zero_init
+	.data: load addr=0000f112, load size=00000006 bytes, run addr=00002012, run size=00000002 bytes, compression=lzss
 
 
 LINKER GENERATED HANDLER TABLE
@@ -326,11 +328,11 @@ address   name
 00000672  BAKMEM9                                
 00000673  BAKMEM9_H                              
 00000672  BAKMEM9_L                              
-0000f678  C$$EXIT                                
-0000f4d8  C1_discharge_time                      
-0000f52c  C2_discharge_time                      
-0000f418  C3_discharge_time                      
-0000f478  C4_discharge_time                      
+0000f6ac  C$$EXIT                                
+0000f4e8  C1_discharge_time                      
+0000f53c  C2_discharge_time                      
+0000f428  C3_discharge_time                      
+0000f488  C4_discharge_time                      
 000002ee  CAPTIOCTL                              
 000002ef  CAPTIOCTL_H                            
 000002ee  CAPTIOCTL_L                            
@@ -400,8 +402,8 @@ address   name
 000001a6  GCCTL1                                 
 000001a7  GCCTL1_H                               
 000001a6  GCCTL1_L                               
-00002000  IC_val1                                
-00002004  IC_val2                                
+00002008  IC_val1                                
+0000200c  IC_val2                                
 00000204  P1DIR                                  
 0000021a  P1IE                                   
 00000218  P1IES                                  
@@ -629,10 +631,10 @@ address   name
 0000f128  __TI_CINIT_Limit                       
 0000f100  __TI_Handler_Table_Base                
 0000f10c  __TI_Handler_Table_Limit               
-0000f6a0  __TI_ISR_TRAP                          
-0000f3ae  __TI_auto_init_nobinit_nopinit_hold_wdt
-0000f2c0  __TI_decompress_lzss                   
-0000f63c  __TI_decompress_none                   
+0000f6d4  __TI_ISR_TRAP                          
+0000f3be  __TI_auto_init_nobinit_nopinit_hold_wdt
+0000f2d0  __TI_decompress_lzss                   
+0000f64c  __TI_decompress_none                   
 0000ffe8  __TI_int48                             
 0000ffea  __TI_int49                             
 0000ffec  __TI_int50                             
@@ -647,19 +649,21 @@ address   name
 ffffffff  __TI_pprof_out_hndl                    
 ffffffff  __TI_prof_data_size                    
 ffffffff  __TI_prof_data_start                   
-0000f5fe  __TI_zero_init_nomemset                
+0000f60e  __TI_zero_init_nomemset                
 ffffffff  __c_args__                             
-0000f580  __memcpy_far                           
-0000f684  _c_int00_noargs                        
+0000f590  __memcpy_far                           
+0000f6b8  _c_int00_noargs                        
 0000fffe  _reset_vector                          
 00002360  _stack                                 
-0000f682  _system_post_cinit                     
-0000f67e  _system_pre_init                       
-0000f678  abort                                  
-0000f5c0  configClock                            
-00002008  discharge_time                         
+0000f6b6  _system_post_cinit                     
+0000f6b2  _system_pre_init                       
+0000f6ac  abort                                  
+0000f5d0  configClock                            
+00002010  discharge_time                         
 0000f128  main                                   
-0000200a  mode                                   
+00002012  mode                                   
+0000f688  reccord_touch_value                    
+00002000  touch_array                            
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
@@ -1035,10 +1039,11 @@ address   name
 000008f2  CPDACDATA                              
 000008f2  CPDACDATA_L                            
 000008f3  CPDACDATA_H                            
-00002000  IC_val1                                
-00002004  IC_val2                                
-00002008  discharge_time                         
-0000200a  mode                                   
+00002000  touch_array                            
+00002008  IC_val1                                
+0000200c  IC_val2                                
+00002010  discharge_time                         
+00002012  mode                                   
 00002360  _stack                                 
 00002400  __STACK_END                            
 0000f100  __TI_Handler_Table_Base                
@@ -1046,22 +1051,23 @@ address   name
 0000f118  __TI_CINIT_Base                        
 0000f128  __TI_CINIT_Limit                       
 0000f128  main                                   
-0000f2c0  __TI_decompress_lzss                   
-0000f3ae  __TI_auto_init_nobinit_nopinit_hold_wdt
-0000f418  C3_discharge_time                      
-0000f478  C4_discharge_time                      
-0000f4d8  C1_discharge_time                      
-0000f52c  C2_discharge_time                      
-0000f580  __memcpy_far                           
-0000f5c0  configClock                            
-0000f5fe  __TI_zero_init_nomemset                
-0000f63c  __TI_decompress_none                   
-0000f678  C$$EXIT                                
-0000f678  abort                                  
-0000f67e  _system_pre_init                       
-0000f682  _system_post_cinit                     
-0000f684  _c_int00_noargs                        
-0000f6a0  __TI_ISR_TRAP                          
+0000f2d0  __TI_decompress_lzss                   
+0000f3be  __TI_auto_init_nobinit_nopinit_hold_wdt
+0000f428  C3_discharge_time                      
+0000f488  C4_discharge_time                      
+0000f4e8  C1_discharge_time                      
+0000f53c  C2_discharge_time                      
+0000f590  __memcpy_far                           
+0000f5d0  configClock                            
+0000f60e  __TI_zero_init_nomemset                
+0000f64c  __TI_decompress_none                   
+0000f688  reccord_touch_value                    
+0000f6ac  C$$EXIT                                
+0000f6ac  abort                                  
+0000f6b2  _system_pre_init                       
+0000f6b6  _system_post_cinit                     
+0000f6b8  _c_int00_noargs                        
+0000f6d4  __TI_ISR_TRAP                          
 0000ffe8  __TI_int48                             
 0000ffea  __TI_int49                             
 0000ffec  __TI_int50                             
@@ -1079,4 +1085,4 @@ ffffffff  __TI_prof_data_size
 ffffffff  __TI_prof_data_start                   
 ffffffff  __c_args__                             
 
-[412 symbols]
+[414 symbols]
