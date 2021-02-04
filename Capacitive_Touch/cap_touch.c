@@ -12,9 +12,20 @@
 long int IC_val1, IC_val2;
 int discharge_time;
 
+void reccord_touch_value(int *touch_array)
+{
+    touch_array[0] = C1_discharge_time();
+    touch_array[1] = C2_discharge_time();
+    touch_array[2] = C3_discharge_time();
+    touch_array[3] = C4_discharge_time();
+}
+
 int C1_discharge_time()
 {
-    CAPT1_PORT_DIR |= CapT1;
+    CAPT12_PORT_DIR |= (CapT1 + CapT2);
+    CAPT34_PORT_DIR |= (CapT3 + CapT4);
+    CAPT12_PORT_OUT &= ~CapT2;
+    CAPT34_PORT_OUT &= ~(CapT3 + CapT4);
     CAPT1_PORT_OUT |= CapT1;
     __delay_cycles(CHARGE_TIME);
     CAPT1_PORT_DIR &= ~CapT1;
@@ -31,7 +42,10 @@ int C1_discharge_time()
 
 int C2_discharge_time()
 {
-    CAPT2_PORT_DIR |= CapT2;
+    CAPT12_PORT_DIR |= (CapT1 + CapT2);
+    CAPT34_PORT_DIR |= (CapT3 + CapT4);
+    CAPT12_PORT_OUT &= ~CapT1;
+    CAPT34_PORT_OUT &= ~(CapT3 + CapT4);
     CAPT2_PORT_OUT |= CapT2;
     __delay_cycles(CHARGE_TIME);
     CAPT2_PORT_DIR &= ~CapT2;
@@ -48,7 +62,10 @@ int C2_discharge_time()
 
 int C3_discharge_time()
 {
-    CAPT3_PORT_DIR |= CapT3;
+    CAPT12_PORT_DIR |= (CapT1 + CapT2);
+    CAPT34_PORT_DIR |= (CapT3 + CapT4);
+    CAPT12_PORT_OUT &= ~(CapT1 + CapT2);
+    CAPT34_PORT_OUT &= ~CapT4;
     CAPT3_PORT_OUT |= CapT3;
     __delay_cycles(CHARGE_TIME);
     CAPT3_PORT_DIR &= ~CapT3;
@@ -65,7 +82,10 @@ int C3_discharge_time()
 
 int C4_discharge_time()
 {
-    CAPT4_PORT_DIR |= CapT4;
+    CAPT12_PORT_DIR |= (CapT1 + CapT2);
+    CAPT34_PORT_DIR |= (CapT3 + CapT4);
+    CAPT12_PORT_OUT &= ~(CapT1 + CapT2);
+    CAPT34_PORT_OUT &= ~CapT3;
     CAPT4_PORT_OUT |= CapT4;
     __delay_cycles(CHARGE_TIME);
     CAPT4_PORT_DIR &= ~CapT4;
@@ -79,4 +99,3 @@ int C4_discharge_time()
 
     return discharge_time;
 }
-

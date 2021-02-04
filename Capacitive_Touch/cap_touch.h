@@ -15,13 +15,32 @@
 #define CapT4   BIT6        //port1
 
 // Values definition
-#define C1_ACTIVE_VALUE         100
-#define C2_ACTIVE_VALUE         100
+#define C1_ACTIVE_VALUE         30
+#define C2_ACTIVE_VALUE         30
 #define C3_ACTIVE_VALUE         30
-#define C4_ACTIVE_VALUE         100
-#define CHARGE_TIME                10
+#define C4_ACTIVE_VALUE         30
+#define CHARGE_TIME             10
 
 // Definition for capacitive touch I/O ports
+
+#define CAPT12_PORT_OUT      P2OUT
+#define CAPT12_PORT_DIR      P2DIR
+#define CAPT12_PORT_SEL0     P2SEL0
+#define CAPT12_PORT_SEL1     P2SEL1
+#define CAPT12_PORT_IES      P2IES
+#define CAPT12_PORT_IE       P2IE
+#define CAPT12_PORT_REN      P2REN
+#define CAPT12_PORT_IN       P2IN
+
+#define CAPT34_PORT_OUT      P1OUT
+#define CAPT34_PORT_DIR      P1DIR
+#define CAPT34_PORT_SEL0     P1SEL0
+#define CAPT34_PORT_SEL1     P1SEL1
+#define CAPT34_PORT_IES      P1IES
+#define CAPT34_PORT_IE       P1IE
+#define CAPT34_PORT_REN      P1REN
+#define CAPT34_PORT_IN       P1IN
+
 #define CAPT1_PORT_OUT      P2OUT
 #define CAPT1_PORT_DIR      P2DIR
 #define CAPT1_PORT_SEL0     P2SEL0
@@ -68,5 +87,6 @@ int C1_discharge_time();
 int C2_discharge_time();
 int C3_discharge_time();
 int C4_discharge_time();
+void reccord_touch_value(int *touch_array);
 
 #endif /* CAPACITIVE_TOUCH_CAP_TOUCH_H_ */

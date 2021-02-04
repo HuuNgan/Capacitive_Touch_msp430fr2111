@@ -4,7 +4,7 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROGRAM.MSP430FR2111.ccxml.TI MSP430 USB1/MSP430" value="${build_artifact:Capacitive Touch}"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.MSP430FR2111.ccxml.TI MSP430 USB1/MSP430" value="Capacitive Touch"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_TARGET_CONFIG" value="${target_config_active_default:Capacitive Touch}"/>
-<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.MSP430FR2111.ccxml.TI MSP430 USB1/MSP430" value="D:/workspace_CCS\Capacitive Touch\Debug\Capacitive Touch.out"/>
+<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.MSP430FR2111.ccxml.TI MSP430 USB1/MSP430" value="D:/MSP_wsp\Capacitive Touch\Debug\Capacitive Touch.out"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/Capacitive Touch"/>
 </listAttribute>
