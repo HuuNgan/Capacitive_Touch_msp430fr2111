@@ -19,7 +19,7 @@
 #define C2_ACTIVE_VALUE         28
 #define C3_ACTIVE_VALUE         35
 #define C4_ACTIVE_VALUE         30
-#define CHARGE_TIME             500000
+#define CHARGE_TIME             800000
 
 // Definition for capacitive touch I/O ports
 

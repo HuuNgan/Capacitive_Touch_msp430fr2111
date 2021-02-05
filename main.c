@@ -10,19 +10,20 @@
 #define LED_ACTIVE          1
 #define LED_DEACTIVE        0
 
-#define NUMBER_OF_MODES              4
+#define NUMBER_OF_MODES              6
 #define MCLK_FREQ_MHZ 8                     // MCLK = 8MHz
 #define LED_BRIGHTNESS_MAX          40000
-#define LED_BRIGHTNESS_MIN          1000
+#define LED_BRIGHTNESS_MIN          800
 #define LED_SPEED_STEP              50                //adjustment step
-#define LED_SPEED_MAX               2000
+#define LED_SPEED_MAX               1000
 #define LED_SPEED_MIN               50
 
 //long int timer_count;
 long int IC_val1, IC_val2, led_brightness=0;
-int mode = 0, periode, delay_time = 1000, sign=10, led=1, LED_SPEED = 250;
+int mode = 0, periode, delay_time = 1000, sign, sign2, led=1, LED_SPEED = 250;
+int red_led_duty = 10000, green_led_duty = 5000, blue_led_duty = 20000;
 //int touch_array[4];
-char led_state;
+char led_state, led_state_2;
 
 void configClock_16MHz(void);
 void Software_Trim();                       // Software Trim to get the best DCOFTRIM value
@@ -103,7 +104,9 @@ void initTimer(void)
 {
     // Configure Timer_B
     TB0CCR1 = 20000;                            // Count up to the value stored in TB0CCR0
+    TB0CCR2 = 30000;
     TB0CCTL1 |= CCIE;                           //CCR1 Interrupt Enabled
+    TB0CCTL2 |= CCIE;
     TB0CTL |= TBSSEL__SMCLK | MC__CONTINUOUS | TBCLR | TBIE;     //start timerB0, SMCLK, continuous mode, clear TBR, enable interrupt
     __enable_interrupt();
 }
@@ -220,9 +223,11 @@ __interrupt void TIMER0_B1_ISR(void)
 //            if(mode==0) P2OUT |= (LED1+LED2);
             break;
         case TB0IV_TBCCR2:
-            break;                  // CCR2 not used
+            led_state_2 = LED_DEACTIVE;
+            break;
         case TB0IV_TBIFG:
             led_state = LED_ACTIVE;
+            led_state_2 = LED_ACTIVE;
 //            if(mode==0) P2OUT &= ~(LED1+LED2);
 
             led_brightness += sign;
@@ -231,8 +236,14 @@ __interrupt void TIMER0_B1_ISR(void)
             if(led_brightness <= LED_BRIGHTNESS_MIN)
             {
                 sign = LED_SPEED;
-                led=-led;
+                led=-led;                   //exchange yellow led
             }
+
+            blue_led_duty += sign2;
+            TB0CCR2 = blue_led_duty;
+            if(blue_led_duty >= LED_BRIGHTNESS_MAX) sign2 = -(LED_SPEED+50);
+            if(blue_led_duty <= LED_BRIGHTNESS_MIN) sign2 = LED_SPEED+50;
+
             break;
         default:
             break;
@@ -276,18 +287,14 @@ __interrupt void TIMER0_B1_ISR(void)
                 P2OUT |= (LED1 + LED2);
             }
             break;
-//            case 5:
-//                P1OUT |= (LED4 | LED5);
-//                P1OUT &= ~LED3;
-//                __delay_cycles(delay_time*2);
-//                P1OUT |= (LED3 | LED5);
-//                P1OUT &= ~LED4;
-//                __delay_cycles(delay_time*2);
-//                P1OUT |= (LED3 | LED4);
-//                P1OUT &= ~LED5;
-//                __delay_cycles(delay_time*2);
-//                P1OUT |= (LED3 | LED4 |LED5);
-//                break;
+        case 5:
+            if(led_state)    P1OUT &= ~LED4;
+            else P1OUT |= LED4;
+//            if(led_state_2)    P1OUT &= ~LED5;
+//            else P1OUT |= LED5;
+            if(led_state_2)   P1OUT &= ~LED3;
+            else P1OUT |= LED3;
+            break;
         default:
             P1OUT |= (LED3 + LED4 + LED5);
             P2OUT |= (LED1 + LED2);
