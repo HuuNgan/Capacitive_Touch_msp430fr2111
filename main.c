@@ -14,21 +14,20 @@
 #define MCLK_FREQ_MHZ 8                     // MCLK = 8MHz
 #define LED_BRIGHTNESS_MAX          40000
 #define LED_BRIGHTNESS_MIN          1000
-#define LED_SPEED                   400
+#define LED_SPEED_STEP              50                //adjustment step
+#define LED_SPEED_MAX               2000
+#define LED_SPEED_MIN               50
 
 //long int timer_count;
 long int IC_val1, IC_val2, led_brightness=0;
-int mode = 0, periode, delay_time = 1000, sign=10, led=1;
-int touch_array[4];
+int mode = 0, periode, delay_time = 1000, sign=10, led=1, LED_SPEED = 250;
+//int touch_array[4];
 char led_state;
 
 void configClock_16MHz(void);
 void Software_Trim();                       // Software Trim to get the best DCOFTRIM value
 void config_clock_8MHz(void);
 void initTimer(void);
-
-
-
 
 /**
  * main.c
@@ -57,7 +56,7 @@ int main(void)
 
 	P1OUT |= LED3 + LED4 + LED5;
     P2OUT &= ~(LED1 + LED2);
-    __delay_cycles(16000000);
+    __delay_cycles(8000000);
     P2OUT |= (LED1 + LED2);
 
     initTimer();
@@ -66,32 +65,30 @@ int main(void)
     {
 //        reccord_touch_value(touch_array);
 
-        while(C1_discharge_time() >= C1_ACTIVE_VALUE)
+        if(C1_discharge_time() >= C1_ACTIVE_VALUE)
         {
-            P2OUT |= (LED1 + LED2);
-            P1OUT &= ~(LED3 + LED4 + LED5);
-            __delay_cycles(3000000);
+            LED_SPEED += LED_SPEED_STEP;
+            __delay_cycles(1000000);
         }
-        while(C2_discharge_time() >= C2_ACTIVE_VALUE)
+        if(C2_discharge_time() >= C2_ACTIVE_VALUE)
         {
-            P1OUT |= (LED3 + LED4 + LED5);
-            P2OUT &= ~(LED1 + LED2);
-            __delay_cycles(3000000);
+            LED_SPEED -= LED_SPEED_STEP;
+            __delay_cycles(1000000);
         }
         if(C3_discharge_time() >= C3_ACTIVE_VALUE)
         {
             mode++;
-            __delay_cycles(3000000);
+            __delay_cycles(5000000);
         }
         if(C4_discharge_time() > C4_ACTIVE_VALUE)
         {
             mode--;
-            __delay_cycles(3000000);
+            __delay_cycles(5000000);
         }
         if(mode > NUMBER_OF_MODES)  mode=0;
         if(mode < 0)    mode = NUMBER_OF_MODES;
-
-
+        if(LED_SPEED >= LED_SPEED_MAX)  LED_SPEED = LED_SPEED_MIN;
+        if(LED_SPEED <= LED_SPEED_MIN)  LED_SPEED = LED_SPEED_MAX;
     }
 
 //	return 0;
