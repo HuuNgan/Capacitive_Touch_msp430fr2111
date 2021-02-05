@@ -12,13 +12,15 @@
 
 #define NUMBER_OF_MODES              4
 #define MCLK_FREQ_MHZ 8                     // MCLK = 8MHz
+#define LED_BRIGHTNESS_MAX          40000
+#define LED_BRIGHTNESS_MIN          1000
+#define LED_SPEED                   400
 
 //long int timer_count;
-long int IC_val1, IC_val2;
-int mode = 0, periode;
+long int IC_val1, IC_val2, led_brightness=0;
+int mode = 0, periode, delay_time = 1000, sign=10, led=1;
 int touch_array[4];
 char led_state;
-int delay_time = 1000;
 
 void configClock_16MHz(void);
 void Software_Trim();                       // Software Trim to get the best DCOFTRIM value
@@ -63,26 +65,6 @@ int main(void)
     while(1)
     {
 //        reccord_touch_value(touch_array);
-//        if(touch_array[0] >= C1_ACTIVE_VALUE)
-//        {
-//            P2OUT |= (LED1 + LED2);
-//            P1OUT &= ~(LED3 + LED4 + LED5);
-//            __delay_cycles(3000000);
-//        }
-//        if(touch_array[1] >= C2_ACTIVE_VALUE)
-//        {
-//            P1OUT |= (LED3 + LED4 + LED5);
-//            P2OUT &= ~(LED1 + LED2);
-//            __delay_cycles(5000000);
-//        }
-//        if(touch_array[2] >= C3_ACTIVE_VALUE);
-//        {
-//            ;
-//        }
-//        if(touch_array[3] >= C4_ACTIVE_VALUE);
-//        {
-//            ;
-//        }
 
         while(C1_discharge_time() >= C1_ACTIVE_VALUE)
         {
@@ -109,67 +91,21 @@ int main(void)
         if(mode > NUMBER_OF_MODES)  mode=0;
         if(mode < 0)    mode = NUMBER_OF_MODES;
 
-        switch(mode)
-        {
-            case 0:
-                P1OUT |= (LED3 + LED4 + LED5);
-                if(led_state)   P2OUT &= ~(LED1 + LED2);
-                else    P2OUT |= (LED1 + LED2);
-                break;
-            case 1:
-//                P2OUT |= LED1;
-//                P2OUT &= ~LED2;
-//                __delay_cycles(delay_time);
-                P2OUT |= LED2;
-                P2OUT &= ~LED1;
-//                __delay_cycles(delay_time);
-                break;
-            case 2:
-                P1OUT |= (LED3 + LED4 + LED5);
-                P2OUT |= (LED1 + LED2);
-                P1OUT &= ~LED3;
-                break;
-            case 3:
-                P1OUT |= (LED3 + LED4 + LED5);
-                P2OUT |= (LED1 + LED2);
-                P1OUT &= ~LED4;
-                break;
-            case 4:
-                P1OUT |= (LED3 + LED4 + LED5);
-                P2OUT |= (LED1 + LED2);
-                P1OUT &= ~LED5;
-                break;
-//            case 5:
-//                P1OUT |= (LED4 | LED5);
-//                P1OUT &= ~LED3;
-//                __delay_cycles(delay_time*2);
-//                P1OUT |= (LED3 | LED5);
-//                P1OUT &= ~LED4;
-//                __delay_cycles(delay_time*2);
-//                P1OUT |= (LED3 | LED4);
-//                P1OUT &= ~LED5;
-//                __delay_cycles(delay_time*2);
-//                P1OUT |= (LED3 | LED4 |LED5);
-//                break;
-            default:
-                P1OUT |= (LED3 + LED4 + LED5);
-                P2OUT |= (LED1 + LED2);
-                break;
-        }
+
     }
 
 //	return 0;
 }
 
-void LED_Set_Brightness(int percent)
+void LED_Set_Brightness(int brightness)
 {
-    TB0CCR1 = percent*(65535/100);
+    TB0CCR1 = brightness;
 }
 
 void initTimer(void)
 {
     // Configure Timer_B
-    LED_Set_Brightness(50);                            // Count up to the value stored in TB0CCR0
+    TB0CCR1 = 20000;                            // Count up to the value stored in TB0CCR0
     TB0CCTL1 |= CCIE;                           //CCR1 Interrupt Enabled
     TB0CTL |= TBSSEL__SMCLK | MC__CONTINUOUS | TBCLR | TBIE;     //start timerB0, SMCLK, continuous mode, clear TBR, enable interrupt
     __enable_interrupt();
@@ -283,16 +219,81 @@ __interrupt void TIMER0_B1_ISR(void)
         case TB0IV_NONE:
             break;
         case TB0IV_TB0CCR1:
-//            led_state = LED_DEACTIVE;
-            if(mode==0) P2OUT |= (LED1+LED2);
+            led_state = LED_DEACTIVE;
+//            if(mode==0) P2OUT |= (LED1+LED2);
             break;
         case TB0IV_TBCCR2:
             break;                  // CCR2 not used
         case TB0IV_TBIFG:
-//            led_state = LED_ACTIVE;
-            if(mode==0) P2OUT &= ~(LED1+LED2);
+            led_state = LED_ACTIVE;
+//            if(mode==0) P2OUT &= ~(LED1+LED2);
+
+            led_brightness += sign;
+            LED_Set_Brightness(led_brightness);
+            if(led_brightness >= LED_BRIGHTNESS_MAX) sign = -LED_SPEED;
+            if(led_brightness <= LED_BRIGHTNESS_MIN)
+            {
+                sign = LED_SPEED;
+                led=-led;
+            }
             break;
         default:
+            break;
+    }
+
+    switch(mode)
+    {
+        case 0:
+            P1OUT |= (LED3 + LED4 + LED5);
+            if(led_state)   P2OUT &= ~(LED1 + LED2);
+            else    P2OUT |= (LED1 + LED2);
+            break;
+        case 1:
+            if(led_state && led == 1) P2OUT &= ~LED1;
+            else if(led_state && led == -1) P2OUT &= ~LED2;
+            else P2OUT |= (LED1 + LED2);
+            break;
+        case 2:
+            if(led_state) P1OUT &= ~LED3;
+            else
+            {
+                P1OUT |= (LED3 + LED4 + LED5);
+                P2OUT |= (LED1 + LED2);
+            }
+            break;
+        case 3:
+            if(led_state) P1OUT &= ~LED4;
+            else
+            {
+                P1OUT |= (LED3 + LED4 + LED5);
+                P2OUT |= (LED1 + LED2);
+            }
+
+            break;
+        case 4:
+
+            if(led_state) P1OUT &= ~LED5;
+            else
+            {
+                P1OUT |= (LED3 + LED4 + LED5);
+                P2OUT |= (LED1 + LED2);
+            }
+            break;
+//            case 5:
+//                P1OUT |= (LED4 | LED5);
+//                P1OUT &= ~LED3;
+//                __delay_cycles(delay_time*2);
+//                P1OUT |= (LED3 | LED5);
+//                P1OUT &= ~LED4;
+//                __delay_cycles(delay_time*2);
+//                P1OUT |= (LED3 | LED4);
+//                P1OUT &= ~LED5;
+//                __delay_cycles(delay_time*2);
+//                P1OUT |= (LED3 | LED4 |LED5);
+//                break;
+        default:
+            P1OUT |= (LED3 + LED4 + LED5);
+            P2OUT |= (LED1 + LED2);
             break;
     }
 }
